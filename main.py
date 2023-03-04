@@ -2,10 +2,12 @@ import typing
 from conf import TOKEN, BIBLE_TOKEN, GUILD_ID
 import discord
 from discord import app_commands
+from discord.ext import tasks
 import requests
 from bs4 import BeautifulSoup
 import random
-
+import datetime
+DEMO = True
 books = {"Genesis":"GEN",
         "Exodus":"EXO",
         "Leviticus":"LEV",
@@ -116,7 +118,7 @@ def getRand():
                     }
                     )
     l = x.json()["data"]
-    chapter = random.randint(0,len(l))
+    chapter = random.randint(1,len(l)-1)
     x = requests.get(f'https://api.scripture.api.bible/v1/bibles/9879dbb7cfe39e4d-01/chapters/{book}.{chapter}/verses',
                     headers={
                         "accept": "application/json",
@@ -129,12 +131,33 @@ def getRand():
     verse = random.randint(0,len(l))
     return getVerse(book,chapter,verse)
 
-
+def getDaily():
+    f = open("daily.txt", "r")
+    x= f.readline()
+    f.close()
+    return x
+    
+def setDaily():
+    with open("daily.txt","w") as f:
+        f.write(getRand())
+    
 ##########################################
+
+#Get and Store daily verse
+@tasks.loop(seconds=30)
+async def daily_verse():
+    if DEMO or (datetime.datetime.now().strftime("%H") == 00 and datetime.datetime.now().strftime("%M") == 00):
+        # Set new verse at 12AM or if demo version (every 30 seconds)
+        print("Setting daily verse..")
+        setDaily()
+
+
 class Didomi(discord.Client):
     async def on_ready(self):
         print(f'Logged on as {self.user}!')
         await tree.sync(guild=discord.Object(id=GUILD_ID))
+        daily_verse.start()
+        
 
     async def on_message(self, message):
         print(f'Message from {message.author}: {message.content}')
@@ -253,5 +276,10 @@ async def fetch(i: discord.Interaction, book:str, chapter: int, verse:int):
 @tree.command(name="rand", description="Get a random verse from the bible!",guild = discord.Object(id=GUILD_ID))
 async def rand(i: discord.Interaction):
     await i.response.send_message(getRand())
+###############################################################
+@tree.command(name="daily", description="Get the verse of the day!",guild = discord.Object(id=GUILD_ID))
+async def rand(i: discord.Interaction):
+    await i.response.send_message(getDaily())
+
 
 client.run(TOKEN)
