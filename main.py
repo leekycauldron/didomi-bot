@@ -4,8 +4,9 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def getVerse(chapter,verse):
-    x = requests.get('https://api.scripture.api.bible/v1/bibles/9879dbb7cfe39e4d-01/verses/GEN.1.1',
+
+def getVerse(book,chapter,verse):
+    x = requests.get(f'https://api.scripture.api.bible/v1/bibles/9879dbb7cfe39e4d-01/verses/{book}.{chapter}.{verse}',
                     headers={
                         "accept": "application/json",
                         "api-key": BIBLE_TOKEN
@@ -26,8 +27,11 @@ class Didomi(discord.Client):
     
         print(f'Message from {message.author}: {message.content}')
 
-        if "verse" in message.content:
-            await message.channel.send(getVerse(1,1)) 
+        if message.content.startswith("fetch"):
+            book = message.content[6:9]
+            chapter = message.content[10:11]
+            verse = message.content[12:13]
+            await message.channel.send(getVerse(book,chapter,verse)) 
 
 intents = discord.Intents.default()
 intents.message_content = True
