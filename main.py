@@ -28,11 +28,13 @@ class Didomi(discord.Client):
         print(f'Message from {message.author}: {message.content}')
 
         if message.content.startswith("fetch"):
-            book = message.content[6:9]
-            chapter = message.content[10:11]
-            verse = message.content[12:13]
+            stuff = message.content[6:].split(":")
+            
+            book = stuff[0]
+            chapter = stuff[1]
+            verse = stuff[2]
+           
             await message.channel.send(getVerse(book,chapter,verse)) 
-
 intents = discord.Intents.default()
 intents.message_content = True
 
