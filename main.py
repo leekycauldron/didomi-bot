@@ -4,6 +4,7 @@ import discord
 from discord import app_commands
 import requests
 from bs4 import BeautifulSoup
+import random
 
 books = {"Genesis":"GEN",
         "Exodus":"EXO",
@@ -72,6 +73,7 @@ books = {"Genesis":"GEN",
         "Jude":"JUD",
         "Revelation":"REV",}
 
+# Gets a specified Verse
 def getVerse(book,chapter,verse):
     x = requests.get(f'https://api.scripture.api.bible/v1/bibles/9879dbb7cfe39e4d-01/verses/{book}.{chapter}.{verse}',
                     headers={
@@ -93,6 +95,39 @@ def getVerse(book,chapter,verse):
     print(idx)
     ref = x.json()["data"]["reference"]
     return ref + " `" + v[idx:] + "`"
+
+
+#Gets a random verse in a random chapter in a random book.
+def getRand():
+    # Get a random book
+    
+    x = requests.get(f'https://api.scripture.api.bible/v1/bibles/9879dbb7cfe39e4d-01/books',
+                    headers={
+                        "accept": "application/json",
+                        "api-key": BIBLE_TOKEN
+                    }
+                    )
+    r = random.choice([(0,37),(52,80)])
+    book = x.json()["data"][random.randint(*r)]["id"]
+    x = requests.get(f'https://api.scripture.api.bible/v1/bibles/9879dbb7cfe39e4d-01/books/{book}/chapters',
+                    headers={
+                        "accept": "application/json",
+                        "api-key": BIBLE_TOKEN
+                    }
+                    )
+    l = x.json()["data"]
+    chapter = random.randint(0,len(l))
+    x = requests.get(f'https://api.scripture.api.bible/v1/bibles/9879dbb7cfe39e4d-01/chapters/{book}.{chapter}/verses',
+                    headers={
+                        "accept": "application/json",
+                        "api-key": BIBLE_TOKEN
+                    }
+                    )
+
+
+    l = x.json()["data"]
+    verse = random.randint(0,len(l))
+    return getVerse(book,chapter,verse)
 
 
 ##########################################
@@ -213,5 +248,10 @@ async def autocomplete(
 @app_commands.autocomplete(book=autocomplete)
 async def fetch(i: discord.Interaction, book:str, chapter: int, verse:int):
     await i.response.send_message(getVerse(books[book],chapter,verse))
+
+###############################################################
+@tree.command(name="rand", description="Get a random verse from the bible!",guild = discord.Object(id=GUILD_ID))
+async def rand(i: discord.Interaction):
+    await i.response.send_message(getRand())
 
 client.run(TOKEN)
