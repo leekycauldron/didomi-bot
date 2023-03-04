@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 import random
 import datetime
 import openai
-
+import os
 
 openai.api_key = AI_KEY
 DEMO = True
@@ -151,7 +151,7 @@ def setDaily():
 ##########################################
 
 #Get and Store daily verse
-@tasks.loop(seconds=30)
+@tasks.loop(seconds=60)
 async def daily_verse():
     if DEMO or (datetime.datetime.now().strftime("%H") == 00 and datetime.datetime.now().strftime("%M") == 00):
         # Set new verse at 12AM or if demo version (every 30 seconds)
@@ -205,13 +205,13 @@ tree = app_commands.CommandTree(client)
 ###################
 #FUNCTIONS:
 ####################
-@tree.command(name="help", description="Explains all commands in more depth, as well as the purpose of this bot!",guild = discord.Object(id=GUILD_ID))
+"""@tree.command(name="help", description="Explains all commands in more depth, as well as the purpose of this bot!",guild = discord.Object(id=GUILD_ID))
 async def help(i: discord.Interaction):
     helptext = "```"
     for command in tree.get_commands(guild = discord.Object(id=GUILD_ID)):
         helptext+=f"{command.name} - {command.description}\n\n"
     helptext+="```"
-    await i.response.send_message(helptext)
+    await i.response.send_message(helptext)"""
 #######################################################
 """@tree.command(name="trivia", description="Answer easy to difficult biblical questions!",guild = discord.Object(id=GUILD_ID))
 async def trivia(i: discord.Interaction):
@@ -329,7 +329,24 @@ async def start(i: discord.Interaction):
             await i.response.send_message("❌ You already have a chat running! Run `/end` to stop.")
             break
     if not is_in:
-        chats.append([id,chat_channel,uid,messages.copy()])
+        
+        if os.path.exists(os.path.join("users",str(i.user.id)+".txt")): # check if user has had a previous conversation
+            with open(os.path.join("users",str(i.user.id)+".txt"),"r") as f:
+                message = "use this information about me for our conversation: " + f.read()
+                ms = messages.copy()
+                
+                ms.append(
+                    {"role": "user", "content": message}
+                )
+                c = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo", messages=ms
+                )
+                reply = c.choices[0].message.content
+                ms.append({"role":"assistant","content":reply})
+                chats.append([id,chat_channel,uid,ms.copy()])
+        else:
+            chats.append([id,chat_channel,uid,messages.copy()])
+        
         await i.response.send_message("👋 Hi, I'm Didomi! Ask me anything! Run `/end` to stop.")
         print(chats)
 ###############################################################
@@ -337,9 +354,21 @@ async def start(i: discord.Interaction):
 async def end(i: discord.Interaction):
     for chat in range(len(chats)):
         if i.user.id == chats[chat][2]:
+            # Save summary to database.
+            with open(os.path.join("users",str(i.user.id)+".txt"),"w") as f:
+                message = "summarize our conversation"
+                messages = chats[chat][3]
+                messages.append(
+                    {"role": "user", "content": message}
+                )
+                c = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo", messages=messages
+                )
+                reply = c.choices[0].message.content
+                f.write(reply)
             chats.pop(chat)
             break
-            
+    
     await i.response.send_message("Goodbye!")
 
 client.run(TOKEN)

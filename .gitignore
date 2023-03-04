@@ -4,3 +4,4 @@ conf.py
 /.vscode/
 /lib/
 aitest.py
+/users/*
