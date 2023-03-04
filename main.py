@@ -156,7 +156,12 @@ async def daily_verse():
     if DEMO or (datetime.datetime.now().strftime("%H") == 00 and datetime.datetime.now().strftime("%M") == 00):
         # Set new verse at 12AM or if demo version (every 30 seconds)
         print("Setting daily verse..")
-        setDaily()
+        while True:
+            try:
+                setDaily()
+                break
+            except:
+                continue
 
 
 class Didomi(discord.Client):
@@ -182,7 +187,7 @@ class Didomi(discord.Client):
                         model="gpt-3.5-turbo", messages=messages
                     )
                     reply = c.choices[0].message.content
-                    await message.channel.send(reply)
+                    await message.channel.send(reply,reference=message)
                     print(reply)
                     messages.append({"role":"assistant","content":reply})
                 break
