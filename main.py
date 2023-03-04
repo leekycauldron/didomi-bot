@@ -1,5 +1,6 @@
 import typing
 from conf import TOKEN, BIBLE_TOKEN, GUILD_ID, AI_KEY
+from text import SETUP
 import discord
 from discord import app_commands
 from discord.ext import tasks
@@ -184,7 +185,7 @@ class Didomi(discord.Client):
                     await message.channel.send(reply)
                     print(reply)
                     messages.append({"role":"assistant","content":reply})
-            break
+                break
 
 
 intents = discord.Intents.default()
@@ -309,11 +310,11 @@ async def rand(i: discord.Interaction):
 @tree.command(name="start", description="Start a chat with me!",guild = discord.Object(id=GUILD_ID))
 async def start(i: discord.Interaction):
     
-    id = len(chats)
+    id = 0
     chat_channel = i.channel.id
     uid = i.user.id
     messages = [
-        {"role":"system","content":"You are a kind helpful pastor and your name is Didomi."}
+        {"role":"system","content":SETUP}
     ]
 
     is_in = False
