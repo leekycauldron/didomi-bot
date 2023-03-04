@@ -1,10 +1,76 @@
+import typing
 from conf import TOKEN, BIBLE_TOKEN, GUILD_ID
 import discord
 from discord import app_commands
 import requests
 from bs4 import BeautifulSoup
 
-
+books = {"Genesis":"GEN",
+        "Exodus":"EXO",
+        "Leviticus":"LEV",
+        "Numbers":"NUM",
+        "Deuteronomy":"DEU",
+        "Joshua":"JOS",
+        "Judges":"JDG",
+        "Ruth":"RUT",
+        "1 Samuel":"1SA",
+        "2 Samuel":"2SA",
+        "1 Kings":"1KI",
+        "2 Kings":"2KI",
+        "1 Chronicles":"1CH",
+        "2 Chronicles":"2CH",
+        "Ezra":"EZR",
+        "Nehemiah":"NEH",
+        "Esther":"EST",
+        "Job":"JOB",
+        "Psalms":"PSA",
+        "Proverbs":"PRO",
+        "Ecclesiastes":"ECC",
+        "Song of Solomon":"SNG",
+        "Isaiah":"ISA",
+        "Jeremiah":"JER",
+        "Lamentations":"LAM",
+        "Ezekiel":"EZK",
+        "Daniel":"DAN",
+        "Hosea":"HOS",
+        "Joel":"JOL",
+        "Amos":"AMO",
+        "Obadiah":"OBA",
+        "Jonah":"JON",
+        "Micah":"MIC",
+        "Nahum":"NAM",
+        "Habakkuk":"HAB",
+        "Zephaniah":"ZEP",
+        "Haggai":"HAG",
+        "Zechariah":"ZEC",
+        "Malachi":"MAL",
+        "Matthew":"MAT",
+        "Mark":"MRK",
+        "Luke":"LUK",
+        "John":"JHN",
+        "Acts":"ACT",
+        "Romans":"ROM",
+        "1 Corinthians":"1CO",
+        "2 Corinthians":"2CO",
+        "Galatians":"GAL",
+        "Ephesians":"EPH",
+        "Philippians":"PHP",
+        "Colossians":"COL",
+        "1 Thessalonians":"1TH",
+        "2 Thessalonians":"2TH",
+        "1 Timothy":"1TI",
+        "2 Timothy":"2TI",
+        "Titus":"TIT",
+        "Philemon":"PHM",
+        "Hebrews":"HEB",
+        "James":"JAS",
+        "1 Peter":"1PE",
+        "2 Peter":"2PE",
+        "1 John":"1JN",
+        "2 John":"2JN",
+        "3 John":"3JN",
+        "Jude":"JUD",
+        "Revelation":"REV",}
 
 def getVerse(book,chapter,verse):
     x = requests.get(f'https://api.scripture.api.bible/v1/bibles/9879dbb7cfe39e4d-01/verses/{book}.{chapter}.{verse}',
@@ -37,82 +103,105 @@ client = Didomi(intents=intents)
 tree = app_commands.CommandTree(client)
 
 
+###################
+#FUNCTIONS:
+####################
+@tree.command(name="help", description="Explains all commands in more depth, as well as the purpose of this bot!",guild = discord.Object(id=GUILD_ID))
+async def help(i: discord.Interaction):
+    helptext = "```"
+    for command in tree.get_commands(guild = discord.Object(id=GUILD_ID)):
+        helptext+=f"{command.name} - {command.description}\n\n"
+    helptext+="```"
+    await i.response.send_message(helptext)
+#######################################################
+"""@tree.command(name="trivia", description="Answer easy to difficult biblical questions!",guild = discord.Object(id=GUILD_ID))
+async def trivia(i: discord.Interaction):
+    helptext = "```"
+    for command in tree.get_commands(guild = discord.Object(id=GUILD_ID)):
+        helptext+=f"{command.name} - {command.description}\n\n"
+    helptext+="```"
+    await i.response.send_message(helptext)"""
 
-@tree.command(name="test", description="test",guild = discord.Object(id=GUILD_ID))
-async def self(i: discord.Interaction, name:str):
-    await i.response.send_message("Same!")
+######################################################
 
-@tree.command(name="fetch", description="test",guild = discord.Object(id=GUILD_ID))
-@app_commands.choices(books=[
-        app_commands.Choice(name="Genesis", value="GEN"),
-        app_commands.Choice(name="Exodus", value="EXO"),
-        app_commands.Choice(name="Leviticus", value="LEV"),
-        app_commands.Choice(name="Numbers", value="NUM"),
-        app_commands.Choice(name="Deuteronomy", value="DEU"),
-        app_commands.Choice(name="Joshua", value="JOS"),
-        app_commands.Choice(name="Judges", value="JDG"),
-        app_commands.Choice(name="Ruth", value="RUT"),
-        app_commands.Choice(name="1 Samuel", value="1SA"),
-        app_commands.Choice(name="2 Samuel", value="2SA"),
-        app_commands.Choice(name="1 Kings", value="1KI"),
-        app_commands.Choice(name="2 Kings", value="2KI"),
-        app_commands.Choice(name="1 Chronicles", value="1CH"),
-        app_commands.Choice(name="2 Chronicles", value="2CH"),
-        app_commands.Choice(name="Ezra", value="EZR"),
-        app_commands.Choice(name="Nehemiah", value="NEH"),
-        app_commands.Choice(name="Esther", value="EST"),
-        app_commands.Choice(name="Job", value="JOB"),
-        app_commands.Choice(name="Psalms", value="PSA"),
-        app_commands.Choice(name="Proverbs", value="PRO"),
-        app_commands.Choice(name="Ecclesiastes", value="ECC"),
-        app_commands.Choice(name="Song of Solomon", value="SNG"),
-        app_commands.Choice(name="Isaiah", value="ISA"),
-        app_commands.Choice(name="Jeremiah", value="JER"),
-        app_commands.Choice(name="Lamentations", value="LAM"),
-        app_commands.Choice(name="Ezekiel", value="EZK"),
-        app_commands.Choice(name="Daniel", value="DAN"),
-        app_commands.Choice(name="Hosea", value="HOS"),
-        app_commands.Choice(name="Joel", value="JOL"),
-        app_commands.Choice(name="Amos", value="AMO"),
-        app_commands.Choice(name="Obadiah", value="OBA"),
-        app_commands.Choice(name="Jonah", value="JON"),
-        app_commands.Choice(name="Micah", value="MIC"),
-        app_commands.Choice(name="Nahum", value="NAM"),
-        app_commands.Choice(name="Habakkuk", value="HAB"),
-        app_commands.Choice(name="Zephaniah", value="ZEP"),
-        app_commands.Choice(name="Haggai", value="HAG"),
-        app_commands.Choice(name="Zechariah", value="ZEC"),
-        app_commands.Choice(name="Malachi", value="MAL"),
-        app_commands.Choice(name="Matthew", value="MAT"),
-        app_commands.Choice(name="Mark", value="MRK"),
-        app_commands.Choice(name="Luke", value="LUK"),
-        app_commands.Choice(name="John", value="JHN"),
-        app_commands.Choice(name="Acts", value="ACT"),
-        app_commands.Choice(name="Romans", value="ROM"),
-        app_commands.Choice(name="1 Corinthians", value="1CO"),
-        app_commands.Choice(name="2 Corinthians", value="2CO"),
-        app_commands.Choice(name="Galatians", value="GAL"),
-        app_commands.Choice(name="Ephesians", value="EPH"),
-        app_commands.Choice(name="Philippians", value="PHP"),
-        app_commands.Choice(name="Colossians", value="COL"),
-        app_commands.Choice(name="1 Thessalonians", value="1TH"),
-        app_commands.Choice(name="2 Thessalonians", value="2TH"),
-        app_commands.Choice(name="1 Timothy", value="1TI"),
-        app_commands.Choice(name="2 Timothy", value="2TI"),
-        app_commands.Choice(name="Titus", value="TIT"),
-        app_commands.Choice(name="Philemon", value="PHM"),
-        app_commands.Choice(name="Hebrews", value="HEB"),
-        app_commands.Choice(name="James", value="JAS"),
-        app_commands.Choice(name="1 Peter", value="1PE"),
-        app_commands.Choice(name="2 Peter", value="2PE"),
-        app_commands.Choice(name="1 John", value="1JN"),
-        app_commands.Choice(name="2 John", value="2JN"),
-        app_commands.Choice(name="3 John", value="3JN"),
-        app_commands.Choice(name="Jude", value="JUD"),
-        app_commands.Choice(name="Revelation", value="REV"),
-        ])
-async def fetch(i: discord.Interaction, books: app_commands.Choice[str], chapter: int, verse:int):
-    print(books.value,chapter,verse)
-    await i.response.send_message(getVerse(books.value,chapter,verse))
+async def autocomplete(
+    interaction: discord.Interaction,
+    current: str,
+) -> typing.List[app_commands.Choice[str]]:
+    books = ["Genesis",
+        "Exodus",
+        "Leviticus",
+        "Numbers",
+        "Deuteronomy",
+        "Joshua",
+        "Judges",
+        "Ruth",
+        "1 Samuel",
+        "2 Samuel",
+        "1 Kings",
+        "2 Kings",
+        "1 Chronicles",
+        "2 Chronicles",
+        "Ezra",
+        "Nehemiah",
+        "Esther",
+        "Job",
+        "Psalms",
+        "Proverbs",
+        "Ecclesiastes",
+        "Song of Solomon",
+        "Isaiah",
+        "Jeremiah",
+        "Lamentations",
+        "Ezekiel",
+        "Daniel",
+        "Hosea",
+        "Joel",
+        "Amos",
+        "Obadiah",
+        "Jonah",
+        "Micah",
+        "Nahum",
+        "Habakkuk",
+        "Zephaniah",
+        "Haggai",
+        "Zechariah",
+        "Malachi",
+        "Matthew",
+        "Mark",
+        "Luke",
+        "John",
+        "Acts",
+        "Romans",
+        "1 Corinthians",
+        "2 Corinthians",
+        "Galatians",
+        "Ephesians",
+        "Philippians",
+        "Colossians",
+        "1 Thessalonians",
+        "2 Thessalonians",
+        "1 Timothy",
+        "2 Timothy",
+        "Titus",
+        "Philemon",
+        "Hebrews",
+        "James",
+        "1 Peter",
+        "2 Peter",
+        "1 John",
+        "2 John",
+        "3 John",
+        "Jude",
+        "Revelation"]
+    return [
+        app_commands.Choice(name=book, value=book)
+        for book in books if current.lower() in book.lower()
+    ]
+
+@tree.command(name="fetch", description="Search for a bible verse of your choosing!",guild = discord.Object(id=GUILD_ID))
+@app_commands.autocomplete(book=autocomplete)
+async def fetch(i: discord.Interaction, book:str, chapter: int, verse:int):
+    await i.response.send_message(getVerse(books[book],chapter,verse))
 
 client.run(TOKEN)
