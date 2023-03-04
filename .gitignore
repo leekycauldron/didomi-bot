@@ -1,3 +1,5 @@
 /virtenv
 /__pycache__/
 conf.py
+/.vscode/
+/lib/
