@@ -213,15 +213,7 @@ async def help(i: discord.Interaction):
     helptext+="```"
     await i.response.send_message(helptext)"""
 #######################################################
-"""@tree.command(name="trivia", description="Answer easy to difficult biblical questions!",guild = discord.Object(id=GUILD_ID))
-async def trivia(i: discord.Interaction):
-    helptext = "```"
-    for command in tree.get_commands(guild = discord.Object(id=GUILD_ID)):
-        helptext+=f"{command.name} - {command.description}\n\n"
-    helptext+="```"
-    await i.response.send_message(helptext)"""
 
-######################################################
 
 async def autocomplete(
     interaction: discord.Interaction,
