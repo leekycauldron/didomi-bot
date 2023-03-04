@@ -82,7 +82,17 @@ def getVerse(book,chapter,verse):
     cnt = x.json()["data"]["content"]
 
     soup = BeautifulSoup(cnt, "html.parser")
-    return soup.find("p").text
+    v = soup.find("p").text
+
+    idx = 0
+    # get idx of first letter
+    for i in range(len(v)):
+        if not (str(v[i]).isdigit()):
+            idx = i
+            break
+    print(idx)
+    ref = x.json()["data"]["reference"]
+    return ref + " `" + v[idx:] + "`"
 
 
 ##########################################
