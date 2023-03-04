@@ -1,5 +1,5 @@
 import typing
-from conf import TOKEN, BIBLE_TOKEN, GUILD_ID
+from conf import TOKEN, BIBLE_TOKEN, GUILD_ID, AI_KEY
 import discord
 from discord import app_commands
 from discord.ext import tasks
@@ -7,7 +7,13 @@ import requests
 from bs4 import BeautifulSoup
 import random
 import datetime
+import openai
+
+
+openai.api_key = AI_KEY
 DEMO = True
+
+chats = []
 books = {"Genesis":"GEN",
         "Exodus":"EXO",
         "Leviticus":"LEV",
@@ -161,6 +167,25 @@ class Didomi(discord.Client):
 
     async def on_message(self, message):
         print(f'Message from {message.author}: {message.content}')
+        uid = message.author.id
+        channel_id = message.channel.id
+        for chat in range(len(chats)):
+            # Check if user and channel match an existing chat.
+            messages = chats[chat][3]
+            if uid == chats[chat][2] and channel_id == chats[chat][1]:
+                if message:
+                    messages.append(
+                        {"role": "user", "content": message.content}
+                    )
+                    c = openai.ChatCompletion.create(
+                        model="gpt-3.5-turbo", messages=messages
+                    )
+                    reply = c.choices[0].message.content
+                    await message.channel.send(reply)
+                    print(reply)
+                    messages.append({"role":"assistant","content":reply})
+            break
+
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -280,6 +305,35 @@ async def rand(i: discord.Interaction):
 @tree.command(name="daily", description="Get the verse of the day!",guild = discord.Object(id=GUILD_ID))
 async def rand(i: discord.Interaction):
     await i.response.send_message(getDaily())
+###############################################################
+@tree.command(name="start", description="Start a chat with me!",guild = discord.Object(id=GUILD_ID))
+async def start(i: discord.Interaction):
+    
+    id = len(chats)
+    chat_channel = i.channel.id
+    uid = i.user.id
+    messages = [
+        {"role":"system","content":"You are a kind helpful pastor and your name is Didomi."}
+    ]
 
+    is_in = False
+    for chat in range(len(chats)):
+        if i.user.id == chats[chat][2]:
+            is_in = True
+            await i.response.send_message("❌ You already have a chat running! Run `/end` to stop.")
+            break
+    if not is_in:
+        chats.append([id,chat_channel,uid,messages.copy()])
+        await i.response.send_message("👋 Hi, I'm Didomi! Ask me anything! Run `/end` to stop.")
+        print(chats)
+###############################################################
+@tree.command(name="end", description="Ends the current chat.",guild = discord.Object(id=GUILD_ID))
+async def end(i: discord.Interaction):
+    for chat in range(len(chats)):
+        if i.user.id == chats[chat][2]:
+            chats.pop(chat)
+            break
+            
+    await i.response.send_message("Goodbye!")
 
 client.run(TOKEN)
