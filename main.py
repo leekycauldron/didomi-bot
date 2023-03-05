@@ -320,7 +320,6 @@ async def start(i: discord.Interaction):
     for chat in range(len(chats)):
         if i.user.id == chats[chat][2]:
             is_in = True
-            
             await i.followup.send("❌ You already have a chat running! Run `/end` to stop.")
             break
     if not is_in:
