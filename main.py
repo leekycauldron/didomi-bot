@@ -1,6 +1,6 @@
 import typing
 from conf import TOKEN, BIBLE_TOKEN, GUILD_ID, AI_KEY
-from text import SETUP
+from text import SETUP, personalities
 import discord
 from discord import app_commands
 from discord.ext import tasks
@@ -305,16 +305,33 @@ async def rand(i: discord.Interaction):
 async def rand(i: discord.Interaction):
     await i.response.send_message(getDaily())
 ###############################################################
+async def autocomplete(
+    interaction: discord.Interaction,
+    current: str,
+) -> typing.List[app_commands.Choice[str]]:
+    persons = [
+        "Sarah"
+    ]
+    return [
+        app_commands.Choice(name=person, value=person)
+        for person in persons if current.lower() in person.lower()
+    ]
+@app_commands.autocomplete(person=autocomplete)
 @tree.command(name="start", description="Start a chat with me!",guild = discord.Object(id=GUILD_ID))
-async def start(i: discord.Interaction):
+async def start(i: discord.Interaction, person:str=None):
     await i.response.defer(ephemeral=True)
     await asyncio.sleep(3)
     id = 0
     chat_channel = i.channel.id
     uid = i.user.id
-    messages = [
-        {"role":"system","content":SETUP}
+    if person:
+        messages = [
+        {"role":"system","content":personalities[person]}
     ]
+    else:
+        messages = [
+            {"role":"system","content":SETUP}
+        ]
 
     is_in = False
     for chat in range(len(chats)):
@@ -326,7 +343,8 @@ async def start(i: discord.Interaction):
         
         if os.path.exists(os.path.join("users",str(i.user.id)+".txt")): # check if user has had a previous conversation
             with open(os.path.join("users",str(i.user.id)+".txt"),"r") as f:
-                message = "use this information about me for our conversation: " + f.read()
+                
+                message =  " use this information about me for our conversation: " + f.read()
                 ms = messages.copy()
                 
                 ms.append(
