@@ -352,7 +352,7 @@ async def end(i: discord.Interaction):
         if i.user.id == chats[chat][2]:
             # Save summary to database.
             with open(os.path.join("users",str(i.user.id)+".txt"),"w") as f:
-                message = "summarize our conversation"
+                message = "summarize our conversation and dont forget the summary i gave you at the start and remember things about me"
                 messages = chats[chat][3]
                 messages.append(
                     {"role": "user", "content": message}
@@ -361,6 +361,7 @@ async def end(i: discord.Interaction):
                     model="gpt-3.5-turbo", messages=messages
                 )
                 reply = c.choices[0].message.content
+                print("SUMMARY: " + reply)
                 f.write(reply)
             chats.pop(chat)
             break
