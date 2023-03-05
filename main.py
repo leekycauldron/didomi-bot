@@ -10,9 +10,10 @@ import random
 import datetime
 import openai
 import os
+import asyncio
 
 openai.api_key = AI_KEY
-DEMO = True
+DEMO = False
 
 chats = []
 books = {"Genesis":"GEN",
@@ -306,7 +307,8 @@ async def rand(i: discord.Interaction):
 ###############################################################
 @tree.command(name="start", description="Start a chat with me!",guild = discord.Object(id=GUILD_ID))
 async def start(i: discord.Interaction):
-    
+    await i.response.defer(ephemeral=True)
+    await asyncio.sleep(3)
     id = 0
     chat_channel = i.channel.id
     uid = i.user.id
@@ -318,7 +320,8 @@ async def start(i: discord.Interaction):
     for chat in range(len(chats)):
         if i.user.id == chats[chat][2]:
             is_in = True
-            await i.response.send_message("❌ You already have a chat running! Run `/end` to stop.")
+            
+            await i.followup.send("❌ You already have a chat running! Run `/end` to stop.")
             break
     if not is_in:
         
@@ -339,11 +342,13 @@ async def start(i: discord.Interaction):
         else:
             chats.append([id,chat_channel,uid,messages.copy()])
         
-        await i.response.send_message("👋 Hi, I'm Didomi! Ask me anything! Run `/end` to stop.")
+        await i.followup.send("👋 Hi, I'm Didomi! Ask me anything! Run `/end` to stop.")
         print(chats)
 ###############################################################
 @tree.command(name="end", description="Ends the current chat.",guild = discord.Object(id=GUILD_ID))
 async def end(i: discord.Interaction):
+    await i.response.defer(ephemeral=True)
+    await asyncio.sleep(3)
     for chat in range(len(chats)):
         if i.user.id == chats[chat][2]:
             # Save summary to database.
@@ -361,6 +366,6 @@ async def end(i: discord.Interaction):
             chats.pop(chat)
             break
     
-    await i.response.send_message("Goodbye!")
+    await i.followup.send("Goodbye!")
 
 client.run(TOKEN)
