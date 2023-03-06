@@ -184,13 +184,33 @@ class Didomi(discord.Client):
                     messages.append(
                         {"role": "user", "content": message.content}
                     )
-                    c = openai.ChatCompletion.create(
-                        model="gpt-3.5-turbo", messages=messages
-                    )
-                    reply = c.choices[0].message.content
-                    await message.channel.send(reply,reference=message)
-                    print(reply)
-                    messages.append({"role":"assistant","content":reply})
+                    try:
+                        c = openai.ChatCompletion.create(
+                            model="gpt-3.5-turbo", messages=messages
+                        )
+                        reply = c.choices[0].message.content
+                        await message.channel.send(reply,reference=message)
+                        print(reply)
+                        messages.append({"role":"assistant","content":reply})
+                    except:
+                        for chat in range(len(chats)):
+                            if uid == chats[chat][2]:
+                                # Save summary to database.
+                                with open(os.path.join("users",str(uid)+".txt"),"w") as f:
+                                    message = "summarize our conversation and dont forget the summary i gave you at the start and remember things about me"
+                                    messages = chats[chat][3]
+                                    messages.append(
+                                        {"role": "user", "content": message}
+                                    )
+                                    c = openai.ChatCompletion.create(
+                                        model="gpt-3.5-turbo", messages=messages[-10:] # last ten messages.
+                                    )
+                                    reply = c.choices[0].message.content
+                                    print("SUMMARY: " + reply)
+                                    f.write(reply)
+                                chats.pop(chat)
+                        await message.channel.send("Oops! Our conversation is getting too long, I will remember only our last ten messages, please use /start again!",reference=message)
+                        break
                 break
 
 
@@ -310,7 +330,8 @@ async def autocomplete(
     current: str,
 ) -> typing.List[app_commands.Choice[str]]:
     persons = [
-        "Sarah"
+        "Sarah",
+        "Max"
     ]
     return [
         app_commands.Choice(name=person, value=person)
