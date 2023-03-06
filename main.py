@@ -342,69 +342,79 @@ async def autocomplete(
 async def start(i: discord.Interaction, person:str=None):
     await i.response.defer(ephemeral=True)
     await asyncio.sleep(3)
-    id = 0
-    chat_channel = i.channel.id
-    uid = i.user.id
-    if person:
-        messages = [
-        {"role":"system","content":personalities[person]}
-    ]
-    else:
-        messages = [
-            {"role":"system","content":SETUP}
-        ]
+    while True:
+        try:
+            id = 0
+            chat_channel = i.channel.id
+            uid = i.user.id
+            if person:
+                messages = [
+                {"role":"system","content":personalities[person]}
+            ]
+            else:
+                messages = [
+                    {"role":"system","content":SETUP}
+                ]
 
-    is_in = False
-    for chat in range(len(chats)):
-        if i.user.id == chats[chat][2]:
-            is_in = True
-            await i.followup.send("❌ You already have a chat running! Run `/end` to stop.")
-            break
-    if not is_in:
-        
-        if os.path.exists(os.path.join("users",str(i.user.id)+".txt")): # check if user has had a previous conversation
-            with open(os.path.join("users",str(i.user.id)+".txt"),"r") as f:
+            is_in = False
+            for chat in range(len(chats)):
+                if i.user.id == chats[chat][2]:
+                    is_in = True
+                    await i.followup.send("❌ You already have a chat running! Run `/end` to stop.")
+                    break
+            if not is_in:
                 
-                message =  " use this information about me for our conversation: " + f.read()
-                ms = messages.copy()
+                if os.path.exists(os.path.join("users",str(i.user.id)+".txt")): # check if user has had a previous conversation
+                    with open(os.path.join("users",str(i.user.id)+".txt"),"r") as f:
+                        
+                        message =  " use this information about me for our conversation: " + f.read()
+                        ms = messages.copy()
+                        
+                        ms.append(
+                            {"role": "user", "content": message}
+                        )
+                        c = openai.ChatCompletion.create(
+                            model="gpt-3.5-turbo", messages=ms
+                        )
+                        reply = c.choices[0].message.content
+                        ms.append({"role":"assistant","content":reply})
+                        chats.append([id,chat_channel,uid,ms.copy()])
+                else:
+                    chats.append([id,chat_channel,uid,messages.copy()])
                 
-                ms.append(
-                    {"role": "user", "content": message}
-                )
-                c = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo", messages=ms
-                )
-                reply = c.choices[0].message.content
-                ms.append({"role":"assistant","content":reply})
-                chats.append([id,chat_channel,uid,ms.copy()])
-        else:
-            chats.append([id,chat_channel,uid,messages.copy()])
-        
-        await i.followup.send("👋 Hi, I'm Didomi! Ask me anything! Run `/end` to stop.")
-        print(chats)
+                await i.followup.send("👋 Hi, I'm Didomi! Ask me anything! Run `/end` to stop.")
+                print(chats)
+                break
+        except:
+            continue
 ###############################################################
 @tree.command(name="end", description="Ends the current chat.",guild = discord.Object(id=GUILD_ID))
 async def end(i: discord.Interaction):
-    await i.response.defer(ephemeral=True)
-    await asyncio.sleep(3)
-    for chat in range(len(chats)):
-        if i.user.id == chats[chat][2]:
-            # Save summary to database.
-            with open(os.path.join("users",str(i.user.id)+".txt"),"w") as f:
-                message = "summarize our conversation and dont forget the summary i gave you at the start and remember things about me"
-                messages = chats[chat][3]
-                messages.append(
-                    {"role": "user", "content": message}
-                )
-                c = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo", messages=messages
-                )
-                reply = c.choices[0].message.content
-                print("SUMMARY: " + reply)
-                f.write(reply)
-            chats.pop(chat)
+    while True:
+        try:
+            await i.response.defer(ephemeral=True)
+            await asyncio.sleep(3)
+            for chat in range(len(chats)):
+                if i.user.id == chats[chat][2]:
+                    # Save summary to database.
+                    with open(os.path.join("users",str(i.user.id)+".txt"),"w") as f:
+                        message = "summarize our conversation and dont forget the summary i gave you at the start and remember things about me"
+                        messages = chats[chat][3]
+                        messages.append(
+                            {"role": "user", "content": message}
+                        )
+                        c = openai.ChatCompletion.create(
+                            model="gpt-3.5-turbo", messages=messages
+                        )
+                        reply = c.choices[0].message.content
+                        print("SUMMARY: " + reply)
+                        f.write(reply)
+                    chats.pop(chat)
+                    break
+            
+            await i.followup.send("Goodbye!")
             break
-    
-    await i.followup.send("Goodbye!")
+        except:
+            continue
 
 client.run(TOKEN)
