@@ -197,10 +197,10 @@ class Didomi(discord.Client):
                             if uid == chats[chat][2]:
                                 # Save summary to database.
                                 with open(os.path.join("users",str(uid)+".txt"),"w") as f:
-                                    message = "summarize our conversation and dont forget the summary i gave you at the start and remember things about me"
+                                    m = "summarize our conversation and dont forget the summary i gave you at the start and remember things about me"
                                     messages = chats[chat][3]
                                     messages.append(
-                                        {"role": "user", "content": message}
+                                        {"role": "user", "content": m}
                                     )
                                     c = openai.ChatCompletion.create(
                                         model="gpt-3.5-turbo", messages=messages[-10:] # last ten messages.
