@@ -362,6 +362,9 @@ async def start(i: discord.Interaction, person:str=None):
                     is_in = True
                     await i.followup.send("❌ You already have a chat running! Run `/end` to stop.")
                     break
+            if is_in:
+                break
+
             if not is_in:
                 
                 if os.path.exists(os.path.join("users",str(i.user.id)+".txt")): # check if user has had a previous conversation
